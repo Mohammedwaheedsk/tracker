@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumina | Premium Goal Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <!-- Background Elements -->
+      <div class="glow-bg"></div>
+      
+      <header>
+        <div class="logo">Lumina</div>
+        <div class="user-profile">
+          <!-- Placeholder avatar -->
+          <div class="avatar">U</div>
+        </div>
+      </header>
+
+      <main>
+        <!-- Hero / Dashboard -->
+        <section class="dashboard-hero">
+          <div class="total-balance-card">
+            <span class="label">Total Saved</span>
+            <h1 class="amount">₹<span id="total-saved-display">0</span></h1>
+            <div class="progress-ring-container">
+              <!-- Canvas or SVG for ring -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Daily Check-in CTA (Conditional) -->
+        <section id="daily-checkin-section" class="checkin-reminder hidden">
+          <div class="glass-card checkin-card">
+            <div class="checkin-content">
+              <h3>Checking In</h3>
+              <p>Have you saved towards your goals today?</p>
+              <button id="start-checkin-btn" class="btn-primary">Track Savings</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Goals Grid -->
+        <section class="goals-section">
+          <div class="section-header">
+            <h2>Your Goals</h2>
+            <button id="add-goal-btn" class="btn-icon" title="Add Goal">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+          <div id="goals-list" class="goals-grid">
+            <!-- Goal Cards Injected Here -->
+          </div>
+        </section>
+      </main>
+
+      <!-- Modals -->
+      <div id="add-goal-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content glass-panel">
+          <div class="modal-header">
+            <h3>New Goal</h3>
+            <button class="close-modal">&times;</button>
+          </div>
+          <form id="add-goal-form">
+            <div class="form-group">
+              <label>Goal Name</label>
+              <input type="text" name="name" placeholder="e.g. New MacStudio" required>
+            </div>
+            <div class="form-group">
+              <label>Target Amount (₹)</label>
+              <input type="number" name="target" placeholder="1200" required min="1">
+            </div>
+             <div class="form-group">
+              <label>Deadline</label>
+              <input type="date" name="deadline" required>
+            </div>
+            <button type="submit" class="btn-primary full-width">Create Goal</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="checkin-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content glass-panel">
+          <div class="modal-header">
+            <h3>Daily Save</h3>
+            <button class="close-modal">&times;</button>
+          </div>
+          <form id="checkin-form">
+            <p class="subtitle">How much did you save today?</p>
+            <div class="amount-input-wrapper">
+              <span class="currency">₹</span>
+              <input type="number" id="checkin-amount" placeholder="0" class="giant-input" min="0">
+            </div>
+            
+            <div class="goal-allocator">
+              <p class="helper">Select a goal to allocate to:</p>
+              <select id="goal-selector" required>
+                <!-- Options injected via JS -->
+              </select>
+            </div>
+
+            <button type="submit" class="btn-primary full-width">Update Progress</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
