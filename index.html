@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Lumina">
-    <title>Lumina | Premium Goal Tracker</title>
+    <title>Aura | Wealth Horizon</title>
     <link rel="icon" type="image/png" href="lumina_logo.png">
     <link rel="apple-touch-icon" href="lumina_logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -98,6 +98,7 @@
             font-size: 24px;
             background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.02em;
         }
@@ -354,6 +355,32 @@
             line-height: 1;
         }
 
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-action {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-action:hover {
+            background: var(--text-primary);
+            color: var(--bg-color);
+            transform: scale(1.1);
+        }
+
         .btn-delete:hover {
             background: rgba(255, 71, 87, 0.3);
             transform: scale(1.1);
@@ -554,7 +581,11 @@
         <div class="glow-bg"></div>
 
         <header>
-            <div class="logo">Lumina</div>
+            <div>
+                <div class="logo">Aura</div>
+                <div id="header-date"
+                    style="font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 500;"></div>
+            </div>
             <div class="user-profile">
                 <!-- Placeholder avatar -->
                 <div class="avatar">U</div>
@@ -620,6 +651,10 @@
                         <input type="number" name="target" placeholder="1200" required min="1">
                     </div>
                     <div class="form-group">
+                        <label>Product Link (Optional)</label>
+                        <input type="url" name="productUrl" placeholder="https://store.com/item...">
+                    </div>
+                    <div class="form-group">
                         <label>Deadline</label>
                         <input type="date" name="deadline" required>
                     </div>
@@ -631,7 +666,8 @@
                             <option value="low">Low - Nice to have</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn-primary full-width">Create Goal</button>
+                    <input type="hidden" name="goalId" id="goal-id-hidden">
+                    <button type="submit" class="btn-primary full-width" id="save-goal-btn-text">Create Goal</button>
                 </form>
             </div>
         </div>
@@ -663,9 +699,10 @@
         </div>
     </div>
     <script>
+
         // --- State Management ---
-        const STORAGE_KEY = 'lumina_goals_v1';
-        const CHECKIN_KEY = 'lumina_last_checkin';
+        const STORAGE_KEY = 'aura_goals_v1'; // Renamed storage key
+        const CHECKIN_KEY = 'aura_last_checkin';
 
         let state = {
             goals: [],
@@ -685,19 +722,33 @@
                 closeButtons: document.querySelectorAll('.close-modal'),
                 addGoalForm: document.getElementById('add-goal-form'),
                 checkinForm: document.getElementById('checkin-form'),
-                goalSelector: document.getElementById('goal-selector')
+                goalSelector: document.getElementById('goal-selector'),
+                headerDate: document.getElementById('header-date'),
+                modalTitle: document.querySelector('#add-goal-modal .modal-header h3'),
+                saveGoalBtnText: document.getElementById('save-goal-btn-text'),
+                goalIdHidden: document.getElementById('goal-id-hidden')
             };
 
             // --- Initialization ---
             function init() {
                 loadState();
+                renderDate();
                 render();
                 checkDailyStatus();
                 setupEventListeners();
             }
 
             function loadState() {
-                const stored = localStorage.getItem(STORAGE_KEY);
+                // Try legacy key first if new key empty (migration)
+                let stored = localStorage.getItem(STORAGE_KEY);
+                if (!stored) {
+                    const legacy = localStorage.getItem('lumina_goals_v1');
+                    if (legacy) {
+                        stored = legacy;
+                        localStorage.setItem(STORAGE_KEY, legacy);
+                    }
+                }
+
                 if (stored) {
                     state.goals = JSON.parse(stored);
                     calculateTotal();
@@ -714,6 +765,11 @@
                 state.totalSaved = state.goals.reduce((sum, goal) => sum + (Number(goal.saved) || 0), 0);
             }
 
+            function renderDate() {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                app.headerDate.textContent = new Date().toLocaleDateString('en-US', options);
+            }
+
             // --- Logic ---
             function checkDailyStatus() {
                 const lastCheckIn = localStorage.getItem(CHECKIN_KEY);
@@ -726,19 +782,37 @@
                 }
             }
 
-            function addGoal(name, target, deadline, priority) {
-                const newGoal = {
-                    id: crypto.randomUUID(),
-                    name,
-                    target: Number(target),
-                    saved: 0,
-                    deadline,
-                    priority: priority || 'medium',
-                    createdAt: new Date().toISOString()
+            function handleGoalSubmit(formData) {
+                const id = formData.get('goalId');
+                const goalData = {
+                    name: formData.get('name'),
+                    target: Number(formData.get('target')),
+                    deadline: formData.get('deadline'),
+                    priority: formData.get('priority'),
+                    productUrl: formData.get('productUrl')
                 };
-                state.goals.push(newGoal);
+
+                if (id) {
+                    // Update existing
+                    const index = state.goals.findIndex(g => g.id === id);
+                    if (index !== -1) {
+                        state.goals[index] = { ...state.goals[index], ...goalData };
+                    }
+                } else {
+                    // Create new
+                    const newGoal = {
+                        id: crypto.randomUUID(),
+                        ...goalData,
+                        saved: 0,
+                        createdAt: new Date().toISOString()
+                    };
+                    state.goals.push(newGoal);
+                }
+
                 saveState();
                 checkDailyStatus();
+                app.addGoalForm.reset();
+                closeModal(app.addGoalModal);
             }
 
             function updateGoalProgress(goalId, amount) {
@@ -757,6 +831,25 @@
                 state.goals = state.goals.filter(g => g.id !== id);
                 saveState();
                 checkDailyStatus();
+            }
+
+            function openEditGoalModal(id) {
+                const goal = state.goals.find(g => g.id === id);
+                if (!goal) return;
+
+                app.modalTitle.textContent = 'Edit Goal';
+                app.saveGoalBtnText.textContent = 'Save Changes';
+                app.goalIdHidden.value = goal.id;
+
+                // Populate form
+                const form = app.addGoalForm;
+                form.elements['name'].value = goal.name;
+                form.elements['target'].value = goal.target;
+                form.elements['deadline'].value = goal.deadline;
+                form.elements['priority'].value = goal.priority;
+                form.elements['productUrl'].value = goal.productUrl || '';
+
+                openModal(app.addGoalModal);
             }
 
             function calculateDailyMap(goal) {
@@ -812,6 +905,12 @@
 
                     const card = document.createElement('div');
                     card.className = 'goal-card';
+                    // Check for Product URL
+                    const linkButton = goal.productUrl ?
+                        `<a href="${goal.productUrl}" target="_blank" class="btn-action" title="View Product">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                         </a>` : '';
+
                     card.innerHTML = `
                         <div class="goal-header">
                   <div>
@@ -821,9 +920,12 @@
                     </div>
                     <div class="goal-deadline">Target: ₹${new Intl.NumberFormat('en-IN').format(goal.target)}</div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                      <div class="goal-deadline">${new Date(goal.deadline).toLocaleDateString()}</div>
-                      <button class="btn-delete" title="Delete Goal">
+                  <div class="card-actions">
+                      ${linkButton}
+                      <button class="btn-action btn-edit" title="Edit Goal">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      </button>
+                      <button class="btn-action btn-delete" title="Delete Goal" style="border-color: rgba(255, 71, 87, 0.3); color: #ff4757;">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                               <polyline points="3 6 5 6 21 6"></polyline>
                               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -838,11 +940,12 @@
                   <span>${subtext}</span>
                   <span class="progress-percent">${percent}%</span>
                 </div>
-                <button class="btn-primary" style="margin-top: 15px; width: 100%; padding: 8px; font-size: 12px; background: rgba(255,255,255,0.1);" onclick="window.openDetails('\${goal.id}')">Add Savings</button>
+                <!-- Stop propagation on this button to prevent weird overlaps if we had card click -->
+                <button class="btn-primary" style="margin-top: 15px; width: 100%; padding: 8px; font-size: 12px; background: rgba(255,255,255,0.1);" data-checkin-id="${goal.id}">Add Savings</button>
               `;
 
-                    const btn = card.querySelector('.btn-primary');
-                    btn.onclick = () => openCheckinModal(goal.id);
+                    // Bind Events
+                    card.querySelector('[data-checkin-id]').onclick = () => openCheckinModal(goal.id);
 
                     const deleteBtn = card.querySelector('.btn-delete');
                     deleteBtn.onclick = (e) => {
@@ -852,9 +955,16 @@
                         }
                     };
 
+                    const editBtn = card.querySelector('.btn-edit');
+                    editBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        openEditGoalModal(goal.id);
+                    };
+
                     app.goalsList.appendChild(card);
                 });
 
+                // Populate Selector for Checkin logic
                 app.goalSelector.innerHTML = '<option value="" disabled selected>Select Goal...</option>';
                 state.goals.forEach(goal => {
                     if (goal.saved < goal.target) {
@@ -868,7 +978,14 @@
 
             // --- Event Listeners & UI Helpers ---
             function setupEventListeners() {
-                app.addGoalBtn.onclick = () => openModal(app.addGoalModal);
+                app.addGoalBtn.onclick = () => {
+                    app.addGoalForm.reset();
+                    app.goalIdHidden.value = '';
+                    app.modalTitle.textContent = 'New Goal';
+                    app.saveGoalBtnText.textContent = 'Create Goal';
+                    openModal(app.addGoalModal);
+                };
+
                 app.startCheckinBtn.onclick = () => openModal(app.checkinModal);
 
                 app.closeButtons.forEach(btn => {
@@ -881,9 +998,7 @@
                 app.addGoalForm.onsubmit = (e) => {
                     e.preventDefault();
                     const fd = new FormData(app.addGoalForm);
-                    addGoal(fd.get('name'), fd.get('target'), fd.get('deadline'), fd.get('priority'));
-                    app.addGoalForm.reset();
-                    closeModal(app.addGoalModal);
+                    handleGoalSubmit(fd);
                 };
 
                 app.checkinForm.onsubmit = (e) => {
@@ -921,8 +1036,6 @@
                     app.goalSelector.value = preselectHeightId;
                 }
             }
-
-            window.openCheckinModal = openCheckinModal;
 
             init();
         });
