@@ -1,118 +1,834 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lumina | Premium Goal Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050507;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent-primary: #6366f1;
+            /* Indigo */
+            --accent-secondary: #a855f7;
+            /* Purple */
+            --accent-success: #10b981;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --card-radius: 16px;
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Background Ambient Glow */
+        .glow-bg {
+            position: fixed;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(5, 5, 7, 0) 70%);
+            filter: blur(80px);
+            z-index: -1;
+            pointer-events: none;
+            animation: pulse-glow 10s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translate(20px, 20px) scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        #app {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 48px;
+            padding: 12px 0;
+        }
+
+        .logo {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 24px;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .user-profile .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Dashboard Hero */
+        .dashboard-hero {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .total-balance-card {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .total-balance-card .label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .total-balance-card .amount {
+            font-family: var(--font-heading);
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Check-in Reminder */
+        .checkin-reminder {
+            margin-bottom: 40px;
+            animation: slide-up 0.5s ease-out;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--card-radius);
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .checkin-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .checkin-content h3 {
+            font-family: var(--font-heading);
+            margin-bottom: 4px;
+        }
+
+        .checkin-content p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Buttons */
+        button {
+            cursor: pointer;
+            border: none;
+            font-family: var(--font-body);
+            transition: all var(--transition-fast);
+        }
+
+        .btn-primary {
+            background: var(--text-primary);
+            color: var(--bg-color);
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        .btn-icon {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        /* Goals Grid */
+        .goals-section {
+            animation: fade-in 0.8s ease-out;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-header h2 {
+            font-family: var(--font-heading);
+            font-weight: 600;
+            font-size: 20px;
+        }
+
+        .goals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* Goal Card component */
+        .goal-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--card-radius);
+            padding: 20px;
+            transition: transform var(--transition-fast), border-color var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .goal-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .goal-deadline {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .goal-progress {
+            margin-top: 16px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 3px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .progress-percent {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 7, 0.8);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            z-index: 101;
+            transform: scale(0.95);
+            transition: transform 0.3s var(--transition-bounce);
+            background: #0f1016;
+            /* Solid fallback with some transparency handled by class */
+            border: 1px solid var(--glass-border);
+        }
+
+        .glass-panel {
+            background: rgba(15, 16, 22, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            font-family: var(--font-heading);
+            font-size: 20px;
+        }
+
+        .close-modal {
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 24px;
+            padding: 0;
+        }
+
+        .close-modal:hover {
+            color: var(--text-primary);
+            transform: rotate(90deg);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: var(--font-body);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent-primary);
+        }
+
+        /* Giant Input for Check-in */
+        .amount-input-wrapper {
+            position: relative;
+            margin: 32px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .amount-input-wrapper .currency {
+            font-size: 32px;
+            color: var(--text-secondary);
+            margin-right: 8px;
+        }
+
+        .giant-input {
+            font-size: 48px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--glass-border);
+            border-radius: 0;
+            padding: 8px;
+            width: 200px;
+        }
+
+        .giant-input:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .giant-input::placeholder {
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .helper {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Animations */
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .checkin-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
     <div id="app">
-      <!-- Background Elements -->
-      <div class="glow-bg"></div>
-      
-      <header>
-        <div class="logo">Lumina</div>
-        <div class="user-profile">
-          <!-- Placeholder avatar -->
-          <div class="avatar">U</div>
+        <!-- Background Elements -->
+        <div class="glow-bg"></div>
+
+        <header>
+            <div class="logo">Lumina</div>
+            <div class="user-profile">
+                <!-- Placeholder avatar -->
+                <div class="avatar">U</div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Hero / Dashboard -->
+            <section class="dashboard-hero">
+                <div class="total-balance-card">
+                    <span class="label">Total Saved</span>
+                    <h1 class="amount">₹<span id="total-saved-display">0</span></h1>
+                    <div class="progress-ring-container">
+                        <!-- Canvas or SVG for ring -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Daily Check-in CTA (Conditional) -->
+            <section id="daily-checkin-section" class="checkin-reminder hidden">
+                <div class="glass-card checkin-card">
+                    <div class="checkin-content">
+                        <h3>Checking In</h3>
+                        <p>Have you saved towards your goals today?</p>
+                        <button id="start-checkin-btn" class="btn-primary">Track Savings</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Goals Grid -->
+            <section class="goals-section">
+                <div class="section-header">
+                    <h2>Your Goals</h2>
+                    <button id="add-goal-btn" class="btn-icon" title="Add Goal">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div id="goals-list" class="goals-grid">
+                    <!-- Goal Cards Injected Here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <div id="add-goal-modal" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h3>New Goal</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <form id="add-goal-form">
+                    <div class="form-group">
+                        <label>Goal Name</label>
+                        <input type="text" name="name" placeholder="e.g. New MacStudio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Amount (₹)</label>
+                        <input type="number" name="target" placeholder="1200" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline</label>
+                        <input type="date" name="deadline" required>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Create Goal</button>
+                </form>
+            </div>
         </div>
-      </header>
 
-      <main>
-        <!-- Hero / Dashboard -->
-        <section class="dashboard-hero">
-          <div class="total-balance-card">
-            <span class="label">Total Saved</span>
-            <h1 class="amount">₹<span id="total-saved-display">0</span></h1>
-            <div class="progress-ring-container">
-              <!-- Canvas or SVG for ring -->
-            </div>
-          </div>
-        </section>
+        <div id="checkin-modal" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h3>Daily Save</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <form id="checkin-form">
+                    <p class="subtitle">How much did you save today?</p>
+                    <div class="amount-input-wrapper">
+                        <span class="currency">₹</span>
+                        <input type="number" id="checkin-amount" placeholder="0" class="giant-input" min="0">
+                    </div>
 
-        <!-- Daily Check-in CTA (Conditional) -->
-        <section id="daily-checkin-section" class="checkin-reminder hidden">
-          <div class="glass-card checkin-card">
-            <div class="checkin-content">
-              <h3>Checking In</h3>
-              <p>Have you saved towards your goals today?</p>
-              <button id="start-checkin-btn" class="btn-primary">Track Savings</button>
-            </div>
-          </div>
-        </section>
+                    <div class="goal-allocator">
+                        <p class="helper">Select a goal to allocate to:</p>
+                        <select id="goal-selector" required>
+                            <!-- Options injected via JS -->
+                        </select>
+                    </div>
 
-        <!-- Goals Grid -->
-        <section class="goals-section">
-          <div class="section-header">
-            <h2>Your Goals</h2>
-            <button id="add-goal-btn" class="btn-icon" title="Add Goal">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-          <div id="goals-list" class="goals-grid">
-            <!-- Goal Cards Injected Here -->
-          </div>
-        </section>
-      </main>
-
-      <!-- Modals -->
-      <div id="add-goal-modal" class="modal hidden">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content glass-panel">
-          <div class="modal-header">
-            <h3>New Goal</h3>
-            <button class="close-modal">&times;</button>
-          </div>
-          <form id="add-goal-form">
-            <div class="form-group">
-              <label>Goal Name</label>
-              <input type="text" name="name" placeholder="e.g. New MacStudio" required>
+                    <button type="submit" class="btn-primary full-width">Update Progress</button>
+                </form>
             </div>
-            <div class="form-group">
-              <label>Target Amount (₹)</label>
-              <input type="number" name="target" placeholder="1200" required min="1">
-            </div>
-             <div class="form-group">
-              <label>Deadline</label>
-              <input type="date" name="deadline" required>
-            </div>
-            <button type="submit" class="btn-primary full-width">Create Goal</button>
-          </form>
         </div>
-      </div>
-
-      <div id="checkin-modal" class="modal hidden">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content glass-panel">
-          <div class="modal-header">
-            <h3>Daily Save</h3>
-            <button class="close-modal">&times;</button>
-          </div>
-          <form id="checkin-form">
-            <p class="subtitle">How much did you save today?</p>
-            <div class="amount-input-wrapper">
-              <span class="currency">₹</span>
-              <input type="number" id="checkin-amount" placeholder="0" class="giant-input" min="0">
-            </div>
-            
-            <div class="goal-allocator">
-              <p class="helper">Select a goal to allocate to:</p>
-              <select id="goal-selector" required>
-                <!-- Options injected via JS -->
-              </select>
-            </div>
-
-            <button type="submit" class="btn-primary full-width">Update Progress</button>
-          </form>
-        </div>
-      </div>
     </div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+    <script>
+        // --- State Management ---
+        const STORAGE_KEY = 'lumina_goals_v1';
+        const CHECKIN_KEY = 'lumina_last_checkin';
+
+        let state = {
+            goals: [],
+            totalSaved: 0
+        };
+
+        // --- DOM Elements ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = {
+                goalsList: document.getElementById('goals-list'),
+                totalSavedDisplay: document.getElementById('total-saved-display'),
+                addGoalBtn: document.getElementById('add-goal-btn'),
+                startCheckinBtn: document.getElementById('start-checkin-btn'),
+                checkinSection: document.getElementById('daily-checkin-section'),
+                addGoalModal: document.getElementById('add-goal-modal'),
+                checkinModal: document.getElementById('checkin-modal'),
+                closeButtons: document.querySelectorAll('.close-modal'),
+                addGoalForm: document.getElementById('add-goal-form'),
+                checkinForm: document.getElementById('checkin-form'),
+                goalSelector: document.getElementById('goal-selector')
+            };
+
+            // --- Initialization ---
+            function init() {
+                loadState();
+                render();
+                checkDailyStatus();
+                setupEventListeners();
+            }
+
+            function loadState() {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    state.goals = JSON.parse(stored);
+                    calculateTotal();
+                }
+            }
+
+            function saveState() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state.goals));
+                calculateTotal();
+                render();
+            }
+
+            function calculateTotal() {
+                state.totalSaved = state.goals.reduce((sum, goal) => sum + (Number(goal.saved) || 0), 0);
+            }
+
+            // --- Logic ---
+            function checkDailyStatus() {
+                const lastCheckIn = localStorage.getItem(CHECKIN_KEY);
+                const today = new Date().toDateString();
+
+                if (lastCheckIn !== today && state.goals.length > 0) {
+                    app.checkinSection.classList.remove('hidden');
+                } else {
+                    app.checkinSection.classList.add('hidden');
+                }
+            }
+
+            function addGoal(name, target, deadline) {
+                const newGoal = {
+                    id: crypto.randomUUID(),
+                    name,
+                    target: Number(target),
+                    saved: 0,
+                    deadline,
+                    createdAt: new Date().toISOString()
+                };
+                state.goals.push(newGoal);
+                saveState();
+                checkDailyStatus();
+            }
+
+            function updateGoalProgress(goalId, amount) {
+                const goal = state.goals.find(g => g.id === goalId);
+                if (goal) {
+                    goal.saved += Number(amount);
+                    if (goal.saved > goal.target) goal.saved = goal.target;
+                    saveState();
+
+                    localStorage.setItem(CHECKIN_KEY, new Date().toDateString());
+                    checkDailyStatus();
+                }
+            }
+
+            function calculateDailyMap(goal) {
+                const today = new Date();
+                const deadline = new Date(goal.deadline);
+
+                today.setHours(0, 0, 0, 0);
+                deadline.setHours(0, 0, 0, 0);
+
+                const diffTime = deadline - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                const remaining = goal.target - goal.saved;
+
+                if (remaining <= 0) return { complete: true };
+                if (diffDays <= 0) return { overdue: true, remaining };
+
+                const daily = remaining / diffDays;
+                return { daily, daysLeft: diffDays };
+            }
+
+            // --- Rendering ---
+            function render() {
+                app.totalSavedDisplay.textContent = new Intl.NumberFormat('en-IN').format(state.totalSaved);
+
+                app.goalsList.innerHTML = '';
+
+                if (state.goals.length === 0) {
+                    app.goalsList.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">
+                  <p>No goals set yet. Click + to start your journey.</p>
+                </div>
+              `;
+                    return;
+                }
+
+                state.goals.forEach(goal => {
+                    const percent = Math.min(100, Math.round((goal.saved / goal.target) * 100));
+                    const stats = calculateDailyMap(goal);
+
+                    let subtext = '';
+                    if (stats.complete) subtext = '<span style="color: var(--accent-success)">Goal Completed! 🎉</span>';
+                    else if (stats.overdue) subtext = `<span style="color: #ff4757">Overdue by ₹${stats.remaining}</span>`;
+                    else subtext = `Save ₹${Math.ceil(stats.daily)}/day for ${stats.daysLeft} days`;
+
+                    const card = document.createElement('div');
+                    card.className = 'goal-card';
+                    card.innerHTML = `
+                        <div class="goal-header">
+                  <div>
+                    <div class="goal-title">${goal.name}</div>
+                    <div class="goal-deadline">Target: ₹${new Intl.NumberFormat('en-IN').format(goal.target)}</div>
+                  </div>
+                  <div class="goal-deadline">${new Date(goal.deadline).toLocaleDateString()}</div>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style="width: ${percent}%"></div>
+                </div>
+                <div class="progress-stats">
+                  <span>${subtext}</span>
+                  <span class="progress-percent">${percent}%</span>
+                </div>
+                <button class="btn-primary" style="margin-top: 15px; width: 100%; padding: 8px; font-size: 12px; background: rgba(255,255,255,0.1);" onclick="window.openDetails('\${goal.id}')">Add Savings</button>
+              `;
+
+                    const btn = card.querySelector('button');
+                    btn.onclick = () => openCheckinModal(goal.id);
+
+                    app.goalsList.appendChild(card);
+                });
+
+                app.goalSelector.innerHTML = '<option value="" disabled selected>Select Goal...</option>';
+                state.goals.forEach(goal => {
+                    if (goal.saved < goal.target) {
+                        const opt = document.createElement('option');
+                        opt.value = goal.id;
+                        opt.textContent = goal.name;
+                        app.goalSelector.appendChild(opt);
+                    }
+                });
+            }
+
+            // --- Event Listeners & UI Helpers ---
+            function setupEventListeners() {
+                app.addGoalBtn.onclick = () => openModal(app.addGoalModal);
+                app.startCheckinBtn.onclick = () => openModal(app.checkinModal);
+
+                app.closeButtons.forEach(btn => {
+                    btn.onclick = (e) => {
+                        const modal = e.target.closest('.modal');
+                        closeModal(modal);
+                    };
+                });
+
+                app.addGoalForm.onsubmit = (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(app.addGoalForm);
+                    addGoal(fd.get('name'), fd.get('target'), fd.get('deadline'));
+                    app.addGoalForm.reset();
+                    closeModal(app.addGoalModal);
+                };
+
+                app.checkinForm.onsubmit = (e) => {
+                    e.preventDefault();
+                    const amount = document.getElementById('checkin-amount').value;
+                    const goalId = app.goalSelector.value;
+
+                    if (amount && goalId) {
+                        updateGoalProgress(goalId, amount);
+                        app.checkinForm.reset();
+                        closeModal(app.checkinModal);
+                    }
+                };
+
+                window.onclick = (e) => {
+                    if (e.target.classList.contains('modal')) {
+                        closeModal(e.target);
+                    }
+                };
+            }
+
+            function openModal(modal) {
+                modal.classList.add('active');
+                modal.classList.remove('hidden');
+            }
+
+            function closeModal(modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+
+            function openCheckinModal(preselectHeightId = null) {
+                openModal(app.checkinModal);
+                if (preselectHeightId) {
+                    app.goalSelector.value = preselectHeightId;
+                }
+            }
+
+            window.openCheckinModal = openCheckinModal;
+
+            init();
+        });
+    </script>
+</body>
+
+</html>
