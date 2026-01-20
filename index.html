@@ -338,6 +338,27 @@
             border: 1px solid rgba(46, 213, 115, 0.3);
         }
 
+        .btn-delete {
+            background: rgba(255, 71, 87, 0.1);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            font-size: 16px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .btn-delete:hover {
+            background: rgba(255, 71, 87, 0.3);
+            transform: scale(1.1);
+        }
+
         /* Modals */
         .modal {
             position: fixed;
@@ -732,6 +753,12 @@
                 }
             }
 
+            function deleteGoal(id) {
+                state.goals = state.goals.filter(g => g.id !== id);
+                saveState();
+                checkDailyStatus();
+            }
+
             function calculateDailyMap(goal) {
                 const today = new Date();
                 const deadline = new Date(goal.deadline);
@@ -794,7 +821,15 @@
                     </div>
                     <div class="goal-deadline">Target: ₹${new Intl.NumberFormat('en-IN').format(goal.target)}</div>
                   </div>
-                  <div class="goal-deadline">${new Date(goal.deadline).toLocaleDateString()}</div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="goal-deadline">${new Date(goal.deadline).toLocaleDateString()}</div>
+                      <button class="btn-delete" title="Delete Goal">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                      </button>
+                  </div>
                 </div>
                 <div class="progress-bar-bg">
                   <div class="progress-bar-fill" style="width: ${percent}%"></div>
@@ -806,8 +841,16 @@
                 <button class="btn-primary" style="margin-top: 15px; width: 100%; padding: 8px; font-size: 12px; background: rgba(255,255,255,0.1);" onclick="window.openDetails('\${goal.id}')">Add Savings</button>
               `;
 
-                    const btn = card.querySelector('button');
+                    const btn = card.querySelector('.btn-primary');
                     btn.onclick = () => openCheckinModal(goal.id);
+
+                    const deleteBtn = card.querySelector('.btn-delete');
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (confirm('Are you sure you want to delete this goal?')) {
+                            deleteGoal(goal.id);
+                        }
+                    };
 
                     app.goalsList.appendChild(card);
                 });
